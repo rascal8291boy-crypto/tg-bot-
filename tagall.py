@@ -45,7 +45,7 @@ async def tagall(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("No active user!")
         return
         
-    custom_message = " ".join(context.args) if context.args else "Attention everyone! 🔔"
+    custom_message = " ".join(context.args) if context.args else "     "
     
     mentions = []
     for user_id, user_name in group_users[chat_id].items():
