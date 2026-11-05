@@ -7,6 +7,8 @@ import threading
 
 # Tagall wale module ko import karna
 from tagall import setup_tagall
+from session_gen import setup_session_gen
+
 
 # Logging setup
 logging.basicConfig(
@@ -51,6 +53,8 @@ if __name__ == '__main__':
     
     # Tagall module ke saare handlers yahan attach ho jayenge
     setup_tagall(application)
+    setup_session_gen(application)
+    
     
     print("Bot aur Web Server successfully start ho chuke hain...")
     application.run_polling()
