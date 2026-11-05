@@ -23,7 +23,7 @@ async def tagall(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     
     if chat.type not in ['group', 'supergroup']:
-        await update.message.reply_text("Yeh command sirf Telegram groups mein kaam karti hai!")
+        await update.message.reply_text("this command use in group")
         return
         
     # --- Yahan Admin Check Ho Raha Hai ---
@@ -31,7 +31,7 @@ async def tagall(update: Update, context: ContextTypes.DEFAULT_TYPE):
         member = await chat.get_member(user.id)
         # Agar user admin ya creator nahi hai, toh rok do
         if member.status not in ['administrator', 'creator']:
-            await update.message.reply_text("❌ Yeh command sirf group ke **Admins** use kar sakte hain!")
+            await update.message.reply_text("this command user for admin!")
             return
     except Exception as e:
         print(f"Admin check error: {e}")
@@ -42,7 +42,7 @@ async def tagall(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = chat.id
     
     if chat_id not in group_users or not group_users[chat_id]:
-        await update.message.reply_text("Abhi tak is group ke members ka data collect nahi hua hai. Pehle kuch messages hone dein!")
+        await update.message.reply_text("No active user!")
         return
         
     custom_message = " ".join(context.args) if context.args else "Attention everyone! 🔔"
