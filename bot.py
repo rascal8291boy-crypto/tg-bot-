@@ -1,44 +1,53 @@
 import logging
+import os
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
+from flask import Flask
+import threading
 
-# Logging setup karna
+# Logging setup
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 
+# Chota sa Flask app banana taaki Render URL par HTTP request aane par response mil sake
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is alive and running!"
+
+def run_flask():
+    # Render jo PORT environment variable deta hai, us par app run karna
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # User ka object nikalna
     user = update.effective_user
     user_name = user.first_name
     user_id = user.id
     
-    # Clickable profile link ke liye HTML tag
     mention_link = f'<a href="tg://user?id={user_id}">{user_name}</a>'
-    
-    # Welcome message
     welcome_message = f"Namaste {mention_link}! 🙏\nAapka is Telegram Bot par swagat hai. Main aapki kya madad kar sakta hoon?"
     
-    # Yahan parse_mode mein seedha 'HTML' string pass kar rahe hain
     await update.message.reply_text(
         welcome_message, 
         parse_mode='HTML'
     )
 
 if __name__ == '__main__':
-    # Yahan apna Telegram Bot Token dalein
+    # Flask server ko ek alag background thread mein chalana
+    t = threading.Thread(target=run_flask)
+    t.start()
+    
+    # Telegram Bot Token
     TOKEN = "9131427352:AAFsoDDckWrFkwP-Up7RIWeIxuLg84oIDLY"
     
-    # Application build karein
     application = ApplicationBuilder().token(TOKEN).build()
-    
-    # /start command handler
     start_handler = CommandHandler('start', start)
     application.add_handler(start_handler)
     
-    print("Bot successfully start ho chuka hai...")
-    
-    # Bot ko run karein
+    print("Bot aur Web Server successfully start ho chuke hain...")
     application.run_polling()
     
