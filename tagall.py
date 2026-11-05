@@ -17,18 +17,32 @@ async def track_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
             # User ki ID aur Name save karlo
             group_users[chat_id][user.id] = user.first_name
 
-# /tagall command handler function
+# /tagall command handler function (Sirf Admins ke liye)
 async def tagall(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat = update.effective_chat
+    user = update.effective_user
     
     if chat.type not in ['group', 'supergroup']:
-        await update.message.reply_text("this command use for groups")
+        await update.message.reply_text("Yeh command sirf Telegram groups mein kaam karti hai!")
         return
+        
+    # --- Yahan Admin Check Ho Raha Hai ---
+    try:
+        member = await chat.get_member(user.id)
+        # Agar user admin ya creator nahi hai, toh rok do
+        if member.status not in ['administrator', 'creator']:
+            await update.message.reply_text("❌ Yeh command sirf group ke **Admins** use kar sakte hain!")
+            return
+    except Exception as e:
+        print(f"Admin check error: {e}")
+        await update.message.reply_text("Admin status check karne mein error aaya.")
+        return
+    # -------------------------------------
         
     chat_id = chat.id
     
     if chat_id not in group_users or not group_users[chat_id]:
-        await update.message.reply_text("no list of any user.")
+        await update.message.reply_text("Abhi tak is group ke members ka data collect nahi hua hai. Pehle kuch messages hone dein!")
         return
         
     custom_message = " ".join(context.args) if context.args else "Attention everyone! 🔔"
@@ -49,4 +63,4 @@ async def tagall(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def setup_tagall(application):
     application.add_handler(CommandHandler('tagall', tagall))
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), track_users))
-          
+    
