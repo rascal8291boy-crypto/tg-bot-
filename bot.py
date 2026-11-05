@@ -1,25 +1,34 @@
 import logging
-from telegram import Update
+from telegram import Update, ParseMode
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 
-# Logging setup karna taaki errors ya status console par dikhein
+# Logging setup karna
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # User ka first name nikalna
-    user_name = update.effective_user.first_name
+    # User ka object nikalna taaki uska ID aur Name mil sake
+    user = update.effective_user
+    user_name = user.first_name
+    user_id = user.id
     
-    # Welcome message banana
-    welcome_message = f"Namaste {user_name}! 🙏\nAapka is Telegram Bot par swagat hai. Main aapki kya madad kar sakta hoon?"
+    # MarkdownV2 ya HTML ke zariye mention link banana taaki click karne par profile khule
+    # Yahan hum HTML parse mode ka use kar rahe hain
+    mention_link = f'<a href="tg://user?id={user_id}">{user_name}</a>'
     
-    # User ko message bhejna
-    await update.message.reply_text(welcome_message)
+    # Welcome message banana jisme clickable mention ho
+    welcome_message = f"Namaste {mention_link}! 🙏\nAapka is Telegram Bot par swagat hai. Main aapki kya madad kar sakta hoon?"
+    
+    # Message bhejna aur parse_mode HTML set karna
+    await update.message.reply_text(
+        welcome_message, 
+        parse_mode='HTML'
+    )
 
 if __name__ == '__main__':
-    # Yahan apna Telegram Bot Token dalein jo aapko BotFather se mila hai
+    # Yahan apna Telegram Bot Token dalein jo BotFather se mila hai
     TOKEN = "9131427352:AAFsoDDckWrFkwP-Up7RIWeIxuLg84oIDLY"
     
     # Application build karein
@@ -31,6 +40,6 @@ if __name__ == '__main__':
     
     print("Bot successfully start ho chuka hai... (Band karne ke liye Ctrl+C dabayein)")
     
-    # Bot ko run karein (polling start)
+    # Bot ko run karein
     application.run_polling()
-  
+    
