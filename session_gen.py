@@ -1,14 +1,3 @@
-import asyncio
-
-# --- Python 3.14 aur Pyrogram ke liye Event Loop Fix (Sabse upar hona chahiye) ---
-try:
-  asyncio.get_event_loop()
-except RuntimeError:
-  loop = asyncio.new_event_loop()
-  asyncio.set_event_loop(loop)
-# --------------------------------------------------------------------------------
-
-from pyrogram import Client
 from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes, MessageHandler, filters
 
@@ -39,6 +28,9 @@ async def gensession_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return
 
   user_id = update.effective_user.id
+
+  # Yahan import karne se event loop ka conflict khatam ho jayega
+  from pyrogram import Client
 
   temp_client = Client(
       f"session_gen_{user_id}",
@@ -144,5 +136,5 @@ def setup_session_gen(application):
           filters.TEXT & (~filters.COMMAND) & filters.PRIVATE,
           handle_session_steps,
       )
-  )
+      )
   
