@@ -116,6 +116,4 @@ if __name__ == "__main__":
   setup_session_gen(application)
 
   print("Bot aur Web Server successfully start ho chuke hain...")
-  application.run_polling(drop_pending_updates=True)
-
-    
+  application.run_polling()
