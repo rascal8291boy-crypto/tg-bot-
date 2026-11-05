@@ -1,4 +1,13 @@
 import asyncio
+
+# --- Python 3.14 aur Pyrogram ke liye Event Loop Fix (Sabse upar hona chahiye) ---
+try:
+  asyncio.get_event_loop()
+except RuntimeError:
+  loop = asyncio.new_event_loop()
+  asyncio.set_event_loop(loop)
+# --------------------------------------------------------------------------------
+
 from pyrogram import Client
 from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes, MessageHandler, filters
@@ -8,7 +17,6 @@ login_states = {}
 
 
 async def gensession_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  # Sirf DM (Private chat) mein kaam karega
   if update.effective_chat.type != "private":
     await update.message.reply_text(
         "❌ Yeh command sirf bot ke Personal Chat (DM) mein kaam karegi!"
@@ -32,15 +40,6 @@ async def gensession_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
   user_id = update.effective_user.id
 
-  # --- Event Loop Fix for Pyrogram ---
-  try:
-    asyncio.get_running_loop()
-  except RuntimeError:
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-  # -----------------------------------
-
-  # Pyrogram client initialize karna session ke liye
   temp_client = Client(
       f"session_gen_{user_id}",
       api_id=api_id,
@@ -145,5 +144,5 @@ def setup_session_gen(application):
           filters.TEXT & (~filters.COMMAND) & filters.PRIVATE,
           handle_session_steps,
       )
-    )
-          
+  )
+  
