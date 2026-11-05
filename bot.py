@@ -103,8 +103,8 @@ if __name__ == "__main__":
   t.start()
 
   # Apna Bot Token yahan dalein
-  TOKEN = "9131427352:AAFsoDDckWrFkwP-Up7RIWeIxuLg84oIDLY"
-
+  TOKEN = os.environ.get("BOT_TOKEN")
+    
   application = ApplicationBuilder().token(TOKEN).build()
 
   # /start handler aur Button click handler add karna
