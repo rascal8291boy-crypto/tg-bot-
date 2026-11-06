@@ -9,6 +9,8 @@ from telegram.ext import (
     CommandHandler,
     ContextTypes,
 )
+from tagall import setup_tagall
+
 
 # Logging setup
 logging.basicConfig(
@@ -138,6 +140,8 @@ def main():
   application.add_handler(CommandHandler("start", start))
   application.add_handler(CallbackQueryHandler(button_click_handler))
 
+  setup_tagall(application)
+    
   logger.info("Bot polling start ho rahi hai...")
   application.run_polling(drop_pending_updates=True)
 
@@ -151,4 +155,5 @@ if __name__ == "__main__":
   flask_thread.start()
 
   main()
-      
+  
+
