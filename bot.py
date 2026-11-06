@@ -11,6 +11,7 @@ from telegram.ext import (
 )
 from tagall import setup_tagall
 #from session_gen import setup_session_gen
+from music import setup_music
 
 
 
@@ -144,6 +145,8 @@ def main():
 
   setup_tagall(application)
  # setup_session_gen(application) 
+    setup_music(application)
+
     
   logger.info("Bot polling start ho rahi hai...")
   application.run_polling(drop_pending_updates=True)
