@@ -30,7 +30,7 @@ async def gensession_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
   user_id = update.effective_user.id
 
-  # Purana session agar koi atka ho toh use saaf kar dena
+  # Purana session clear karna agar atka ho
   if user_id in login_states:
     try:
       await login_states[user_id]["client"].disconnect()
@@ -38,8 +38,9 @@ async def gensession_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
       pass
     del login_states[user_id]
 
+  # 👉 Render ke /tmp folder ka path use kiya hai
   temp_client = Client(
-      f"session_gen_{user_id}",
+      f"/tmp/session_gen_{user_id}",
       api_id=api_id,
       api_hash=api_hash,
       in_memory=True,
@@ -82,9 +83,7 @@ async def handle_session_steps(
       state["step"] = "awaiting_otp"
       await update.message.reply_text(
           "📩 **OTP Bhej Diya Gaya Hai!**\n\nKripya apne Telegram app par aaya hua"
-          " OTP code yahan bhejein \n(Jaise: `12345`):\n*(Agar code ke beech"
-          " spaces hain toh unhe hata kar bhejein jaise `1 2 3 4 5` ki jagah"
-          " `12345`)*"
+          " OTP code yahan bhejein \n(Jaise: `12345`):"
       )
     except Exception as e:
       await update.message.reply_text(
