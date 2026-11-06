@@ -1,8 +1,14 @@
 import logging
 import os
+import threading
 from flask import Flask
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import (
+    ApplicationBuilder,
+    CallbackQueryHandler,
+    CommandHandler,
+    ContextTypes,
+)
 
 # Logging setup
 logging.basicConfig(
@@ -20,12 +26,68 @@ def home():
   return "Bot is alive and running!"
 
 
-# Simple Start Command
+# /start command with Inline Buttons
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  await update.message.reply_text(
-      "🎉 Bhai! Bot ne successfully environment variable se response de diya"
-      " hai!"
+  user = update.effective_user
+  mention_link = f'<a href="tg://user?id={user.id}">{user.first_name}</a>'
+
+  welcome_message = (
+      f"Namaste {mention_link}! 🙏\n"
+      "Aapka is Telegram Bot par swagat hai. Niche diye gaye button par click karke"
+      " commands ki jankari lein:"
   )
+
+  # Interactive buttons layout
+  keyboard = [
+      [InlineKeyboardButton("💡 HELP & COMMANDS", callback_data="help_menu")],
+      [
+          InlineKeyboardButton("🔑 GEN SESSION", callback_data="gen_session"),
+          InlineKeyboardButton("🏷️ TAGALL INFO", callback_data="tagall_info"),
+      ],
+  ]
+  reply_markup = InlineKeyboardMarkup(keyboard)
+
+  await update.message.reply_text(
+      welcome_message, reply_markup=reply_markup, parse_mode="HTML"
+  )
+
+
+# Button click handler for instructions
+async def button_click_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+  query = update.callback_query
+  await query.answer()  # Loading effect hatane ke liye
+
+  if query.data == "help_menu":
+    help_text = (
+        "📖 **ALL COMMANDS & INSTRUCTIONS**:\n\n"
+        "1. **/start** - Bot ko start karne aur main menu kholne ke liye.\n"
+        "2. **/gensession <API_ID> <API_HASH>** - Bot ke DM mein secure session"
+        " string generate karne ke liye.\n"
+        "3. **/tagall [message]** - Telegram group ke sabhi active members ko"
+        " tag karne ke liye (Sirf Admin).\n\n"
+        "Kisi bhi specific feature ki jankari ke liye niche wale buttons use"
+        " karein!"
+    )
+    await query.edit_message_text(help_text, parse_mode="Markdown")
+
+  elif query.data == "gen_session":
+    gen_text = (
+        "🔑 **GenSession Guide**:\n\n"
+        "• Yeh command sirf **Bot ke Personal Chat (DM)** mein kaam karti"
+        " hai.\n"
+        "• Format: `/gensession <API_ID> <API_HASH>`\n"
+        "• Iske baad bot aapse phone number aur OTP maangega."
+    )
+    await query.edit_message_text(gen_text, parse_mode="Markdown")
+
+  elif query.data == "tagall_info":
+    tagall_text = (
+        "🏷️ **Tagall Guide**:\n\n"
+        "• Yeh command sirf **Telegram Groups** mein kaam karti hai.\n"
+        "• Ise use karne ke liye aapka group mein **Admin** hona zaroori hai.\n"
+        "• Format: `/tagall Jaldi sabhi online aa jao!`"
+    )
+    await query.edit_message_text(tagall_text, parse_mode="Markdown")
 
 
 def main():
@@ -38,8 +100,9 @@ def main():
 
   application = ApplicationBuilder().token(TOKEN).build()
 
-  # Start handler add karna
+  # Handlers add karna
   application.add_handler(CommandHandler("start", start))
+  application.add_handler(CallbackQueryHandler(button_click_handler))
 
   logger.info("Bot polling start ho rahi hai...")
 
@@ -48,8 +111,6 @@ def main():
 
 
 if __name__ == "__main__":
-  import threading
-
   # Flask server ko alag thread mein chalana taaki Render port scan pass kar sake
   port = int(os.environ.get("PORT", 10000))
   flask_thread = threading.Thread(
@@ -60,4 +121,4 @@ if __name__ == "__main__":
 
   # Bot main function chalana
   main()
-    
+        
