@@ -26,7 +26,18 @@ def home():
   return "Bot is alive and running!"
 
 
-# /start command with Inline Buttons
+# Main Menu Layout (Reusable function)
+def get_main_menu_keyboard():
+  return [
+      [InlineKeyboardButton("💡 HELP & COMMANDS", callback_data="help_menu")],
+      [
+          InlineKeyboardButton("🔑 GEN SESSION", callback_data="gen_session"),
+          InlineKeyboardButton("🏷️ TAGALL INFO", callback_data="tagall_info"),
+      ],
+  ]
+
+
+# /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
   user = update.effective_user
   mention_link = f'<a href="tg://user?id={user.id}">{user.first_name}</a>'
@@ -37,38 +48,53 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
       " commands ki jankari lein:"
   )
 
-  # Interactive buttons layout
-  keyboard = [
-      [InlineKeyboardButton("💡 HELP & COMMANDS", callback_data="help_menu")],
-      [
-          InlineKeyboardButton("🔑 GEN SESSION", callback_data="gen_session"),
-          InlineKeyboardButton("🏷️ TAGALL INFO", callback_data="tagall_info"),
-      ],
-  ]
-  reply_markup = InlineKeyboardMarkup(keyboard)
+  reply_markup = InlineKeyboardMarkup(get_main_menu_keyboard())
 
-  await update.message.reply_text(
-      welcome_message, reply_markup=reply_markup, parse_mode="HTML"
-  )
+  # Check karega ki yeh command se aaya hai ya callback (Back button) se
+  if update.message:
+    await update.message.reply_text(
+        welcome_message, reply_markup=reply_markup, parse_mode="HTML"
+    )
+  elif update.callback_query:
+    query = update.callback_query
+    await query.edit_message_text(
+        welcome_message, reply_markup=reply_markup, parse_mode="HTML"
+    )
 
 
-# Button click handler for instructions
+# Button click handler with Back Button support
 async def button_click_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
   query = update.callback_query
-  await query.answer()  # Loading effect hatane ke liye
+  await query.answer()
 
-  if query.data == "help_menu":
+  if query.data == "back_to_home":
+    user = query.from_user
+    mention_link = f'<a href="tg://user?id={user.id}">{user.first_name}</a>'
+    welcome_message = (
+        f"Namaste {mention_link}! 🙏\n"
+        "Aapka is Telegram Bot par swagat hai. Niche diye gaye button par click karke"
+        " commands ki jankari lein:"
+    )
+    reply_markup = InlineKeyboardMarkup(get_main_menu_keyboard())
+    await query.edit_message_text(
+        welcome_message, reply_markup=reply_markup, parse_mode="HTML"
+    )
+
+  elif query.data == "help_menu":
     help_text = (
         "📖 **ALL COMMANDS & INSTRUCTIONS**:\n\n"
         "1. **/start** - Bot ko start karne aur main menu kholne ke liye.\n"
         "2. **/gensession <API_ID> <API_HASH>** - Bot ke DM mein secure session"
         " string generate karne ke liye.\n"
         "3. **/tagall [message]** - Telegram group ke sabhi active members ko"
-        " tag karne ke liye (Sirf Admin).\n\n"
-        "Kisi bhi specific feature ki jankari ke liye niche wale buttons use"
-        " karein!"
+        " tag karne ke liye (Sirf Admin)."
     )
-    await query.edit_message_text(help_text, parse_mode="Markdown")
+    back_keyboard = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("🔙 Back to Menu", callback_data="back_to_home")]]
+    )
+    await query.edit_message_text(
+        help_text, reply_markup=back_keyboard, parse_mode="Markdown"
+    )
 
   elif query.data == "gen_session":
     gen_text = (
@@ -78,7 +104,12 @@ async def button_click_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         "• Format: `/gensession <API_ID> <API_HASH>`\n"
         "• Iske baad bot aapse phone number aur OTP maangega."
     )
-    await query.edit_message_text(gen_text, parse_mode="Markdown")
+    back_keyboard = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("🔙 Back to Menu", callback_data="back_to_home")]]
+    )
+    await query.edit_message_text(
+        gen_text, reply_markup=back_keyboard, parse_mode="Markdown"
+    )
 
   elif query.data == "tagall_info":
     tagall_text = (
@@ -87,11 +118,15 @@ async def button_click_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         "• Ise use karne ke liye aapka group mein **Admin** hona zaroori hai.\n"
         "• Format: `/tagall Jaldi sabhi online aa jao!`"
     )
-    await query.edit_message_text(tagall_text, parse_mode="Markdown")
+    back_keyboard = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("🔙 Back to Menu", callback_data="back_to_home")]]
+    )
+    await query.edit_message_text(
+        tagall_text, reply_markup=back_keyboard, parse_mode="Markdown"
+    )
 
 
 def main():
-  # Environment variable se token uthana
   TOKEN = os.environ.get("BOT_TOKEN")
 
   if not TOKEN:
@@ -100,18 +135,14 @@ def main():
 
   application = ApplicationBuilder().token(TOKEN).build()
 
-  # Handlers add karna
   application.add_handler(CommandHandler("start", start))
   application.add_handler(CallbackQueryHandler(button_click_handler))
 
   logger.info("Bot polling start ho rahi hai...")
-
-  # Webhook conflicts clear karke polling start karna
   application.run_polling(drop_pending_updates=True)
 
 
 if __name__ == "__main__":
-  # Flask server ko alag thread mein chalana taaki Render port scan pass kar sake
   port = int(os.environ.get("PORT", 10000))
   flask_thread = threading.Thread(
       target=lambda: app.run(host="0.0.0.0", port=port)
@@ -119,6 +150,5 @@ if __name__ == "__main__":
   flask_thread.daemon = True
   flask_thread.start()
 
-  # Bot main function chalana
   main()
-        
+      
