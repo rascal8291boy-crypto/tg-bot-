@@ -10,6 +10,8 @@ from telegram.ext import (
     ContextTypes,
 )
 from tagall import setup_tagall
+from session_gen import setup_session_gen
+
 
 
 # Logging setup
@@ -141,6 +143,7 @@ def main():
   application.add_handler(CallbackQueryHandler(button_click_handler))
 
   setup_tagall(application)
+  setup_session_gen(application) 
     
   logger.info("Bot polling start ho rahi hai...")
   application.run_polling(drop_pending_updates=True)
