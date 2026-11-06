@@ -1,3 +1,4 @@
+from pyrogram import Client
 from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes, MessageHandler, filters
 
@@ -29,8 +30,13 @@ async def gensession_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
   user_id = update.effective_user.id
 
-  # Yahan import karne se event loop ka conflict khatam ho jayega
-  from pyrogram import Client
+  # Purana session agar koi atka ho toh use saaf kar dena
+  if user_id in login_states:
+    try:
+      await login_states[user_id]["client"].disconnect()
+    except:
+      pass
+    del login_states[user_id]
 
   temp_client = Client(
       f"session_gen_{user_id}",
@@ -56,7 +62,7 @@ async def gensession_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_session_steps(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
-  if update.effective_chat.type != "private":
+  if not update.effective_chat or update.effective_chat.type != "private":
     return
 
   user_id = update.effective_user.id
@@ -76,14 +82,19 @@ async def handle_session_steps(
       state["step"] = "awaiting_otp"
       await update.message.reply_text(
           "📩 **OTP Bhej Diya Gaya Hai!**\n\nKripya apne Telegram app par aaya hua"
-          " OTP code yahan bhejein \n(Jaise: `12345`):"
+          " OTP code yahan bhejein \n(Jaise: `12345`):\n*(Agar code ke beech"
+          " spaces hain toh unhe hata kar bhejein jaise `1 2 3 4 5` ki jagah"
+          " `12345`)*"
       )
     except Exception as e:
       await update.message.reply_text(
           f"❌ Error: `{str(e)}`\nSession generation cancel ho gaya. Dobara"
           " `/gensession` try karein."
       )
-      await temp_client.disconnect()
+      try:
+        await temp_client.disconnect()
+      except:
+        pass
       del login_states[user_id]
 
   elif step == "awaiting_otp":
@@ -107,7 +118,10 @@ async def handle_session_steps(
         await update.message.reply_text(
             f"❌ Error: `{str(e)}`\nDobara `/gensession` try karein."
         )
-        await temp_client.disconnect()
+        try:
+          await temp_client.disconnect()
+        except:
+          pass
         del login_states[user_id]
 
   elif step == "awaiting_password":
@@ -125,7 +139,10 @@ async def handle_session_steps(
           f"❌ Galat password ya error: `{str(e)}`\nDobara `/gensession` try"
           " karein."
       )
-      await temp_client.disconnect()
+      try:
+        await temp_client.disconnect()
+      except:
+        pass
       del login_states[user_id]
 
 
@@ -136,5 +153,5 @@ def setup_session_gen(application):
           filters.TEXT & (~filters.COMMAND) & filters.PRIVATE,
           handle_session_steps,
       )
-      )
+  )
   
